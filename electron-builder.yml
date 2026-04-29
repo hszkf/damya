@@ -1,0 +1,55 @@
+appId: com.damya.data-analytics
+productName: Damya
+copyright: Copyright 2024 Damya
+
+publish: null
+
+directories:
+  buildResources: resources
+  output: dist
+
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+  asar: true
+  asarUnpack:
+    - "resources/bun-darwin-aarch64"
+    - "resources/backend/**/*"
+
+dmg:
+  title: "${productName} ${version}"
+  artifactName: "${productName}-${version}-macOS-${arch}.${ext}"
+  window:
+    width: 540
+    height: 380
+
+files:
+  - out/**/*
+
+extraResources:
+  - from: "resources/bun-darwin-aarch64"
+    to: "resources/bun-darwin-aarch64"
+    filter:
+      - "**/*"
+  - from: "backend"
+    to: "backend"
+    filter:
+      - "src/**/*"
+      - "package.json"
+      - "bun.lock"
+      - "node_modules/**/*"
+  - from: "out/renderer"
+    to: "resources/renderer"
+    filter:
+      - "**/*"

@@ -1,0 +1,9 @@
+node_modules/
+out/
+dist/
+.env
+.env.local
+resources/bun-darwin-aarch64
+*.dmg
+*.zip
+.claude/

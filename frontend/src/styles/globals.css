@@ -1,0 +1,1042 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* CSS Variables for Theme Switching */
+  :root {
+    /* Light mode colours (RGB for opacity support) - neutral grays */
+    --surface: 255 255 255;
+    --surface-container: 250 250 250;
+    --surface-container-high: 245 245 245;
+    --surface-container-highest: 238 238 238;
+    --on-surface: 23 23 23;
+    --on-surface-variant: 82 82 82;
+    --outline: 120 120 120;
+    --outline-variant: 212 212 212;
+
+    /* Syntax highlighting - light mode (vibrant, visible) */
+    --syntax-keyword: 0 95 204;
+    --syntax-function: 175 95 0;
+    --syntax-string: 163 21 21;
+    --syntax-number: 9 134 88;
+    --syntax-comment: 90 90 90;
+    --syntax-operator: 38 38 38;
+    --syntax-table: 0 128 128;
+  }
+
+  .dark {
+    /* Dark mode colours */
+    --surface: 14 14 18;
+    --surface-container: 20 20 24;
+    --surface-container-high: 28 28 33;
+    --surface-container-highest: 38 38 44;
+    --on-surface: 228 225 233;
+    --on-surface-variant: 199 197 208;
+    --outline: 145 143 154;
+    --outline-variant: 70 70 79;
+
+    /* Syntax highlighting - dark mode */
+    --syntax-keyword: 197 134 192;
+    --syntax-function: 220 220 170;
+    --syntax-string: 206 145 120;
+    --syntax-number: 181 206 168;
+    --syntax-comment: 106 153 85;
+    --syntax-operator: 212 212 212;
+    --syntax-table: 78 201 176;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  html,
+  body {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-surface text-on-surface font-sans antialiased;
+  }
+
+  /* Custom scrollbar styling - thin */
+  ::-webkit-scrollbar {
+    @apply w-1.5 h-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#555] rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-[#777];
+  }
+
+  ::-webkit-scrollbar-corner {
+    @apply bg-transparent;
+  }
+}
+
+@layer components {
+  /* Editor textarea styling */
+  .code-editor {
+    @apply absolute inset-0 py-3 pr-4 pl-3 bg-transparent border-none outline-none resize-none;
+    @apply font-mono text-[12px] text-transparent;
+    @apply overflow-auto whitespace-pre;
+    line-height: 20px;
+    tab-size: 2;
+    z-index: 10;
+    pointer-events: auto !important;
+  }
+
+  .code-editor::placeholder {
+    @apply text-outline;
+    opacity: 0.5;
+  }
+
+  .code-editor::selection {
+    background-color: rgba(59, 130, 246, 0.3);
+  }
+
+  /* Syntax highlighting background layer */
+  .code-highlight {
+    @apply absolute inset-0 py-3 pr-4 pl-3 bg-transparent border-none outline-none;
+    @apply font-mono text-[12px];
+    @apply overflow-auto whitespace-pre;
+    line-height: 20px;
+    tab-size: 2;
+    z-index: 1;
+    pointer-events: none;
+    margin: 0;
+  }
+
+  /* SQL Syntax Colors - Redshift Theme (Orange accent) */
+  .redshift-theme {
+    color: rgb(var(--on-surface));
+  }
+
+  .redshift-theme .sql-keyword {
+    @apply text-[#c76a00] dark:text-[#ff9900] font-bold;
+  }
+
+  .redshift-theme .sql-function {
+    @apply text-[#c76a00] dark:text-[#ff9900];
+  }
+
+  .redshift-theme .sql-string {
+    @apply text-[#a31515] dark:text-[#ce9178];
+  }
+
+  .redshift-theme .sql-number {
+    @apply text-[#098658] dark:text-[#b5cea8];
+  }
+
+  .redshift-theme .sql-comment {
+    @apply text-[#5a5a5a] dark:text-[#6a9955] italic;
+  }
+
+  .redshift-theme .sql-operator {
+    @apply text-[#383838] dark:text-[#d4d4d4];
+  }
+
+  .redshift-theme .sql-table {
+    @apply text-[#008080] dark:text-[#4ec9b0];
+  }
+
+  /* SQL Syntax Colors - SQL Server Theme (Blue accent) */
+  .sqlserver-theme {
+    color: rgb(var(--on-surface));
+  }
+
+  .sqlserver-theme .sql-keyword {
+    @apply text-[#005fb8] dark:text-[#569cd6] font-bold;
+  }
+
+  .sqlserver-theme .sql-function {
+    @apply text-[#005fb8] dark:text-[#569cd6];
+  }
+
+  .sqlserver-theme .sql-string {
+    @apply text-[#a31515] dark:text-[#ce9178];
+  }
+
+  .sqlserver-theme .sql-number {
+    @apply text-[#098658] dark:text-[#b5cea8];
+  }
+
+  .sqlserver-theme .sql-comment {
+    @apply text-[#5a5a5a] dark:text-[#6a9955] italic;
+  }
+
+  .sqlserver-theme .sql-operator {
+    @apply text-[#383838] dark:text-[#d4d4d4];
+  }
+
+  .sqlserver-theme .sql-table {
+    @apply text-[#008080] dark:text-[#4ec9b0];
+  }
+
+  /* Line numbers */
+  .line-numbers {
+    @apply w-6 pt-3 pb-3 pr-1 text-right flex-shrink-0;
+    @apply bg-surface-container border-r border-outline-variant;
+    @apply font-mono text-[12px] text-outline;
+    @apply select-none;
+    overflow-y: hidden;
+  }
+
+  .line-numbers > div {
+    height: 20px;
+    line-height: 20px;
+  }
+
+  /* Code line numbers for sqlv2 */
+  .code-line-numbers {
+    @apply pt-3 pb-3 pr-1 text-right;
+    @apply font-mono text-[12px] text-on-surface-variant;
+    @apply select-none;
+    overflow-y: hidden;
+  }
+
+  .code-line-numbers > div {
+    height: 20px;
+    line-height: 20px;
+  }
+
+  /* Theme-aware SQL syntax highlighting */
+  .sql-keyword {
+    color: rgb(var(--syntax-keyword));
+    font-weight: 600;
+  }
+
+  .sql-function {
+    color: rgb(var(--syntax-function));
+  }
+
+  .sql-string {
+    color: rgb(var(--syntax-string));
+  }
+
+  .sql-number {
+    color: rgb(var(--syntax-number));
+  }
+
+  .sql-comment {
+    color: rgb(var(--syntax-comment));
+    font-style: italic;
+  }
+
+  .sql-operator {
+    color: rgb(var(--syntax-operator));
+  }
+
+  .sql-table {
+    color: rgb(var(--syntax-table));
+  }
+
+  /* Caret colors for each database type */
+  .caret-redshift {
+    caret-color: #ff9900 !important;
+  }
+
+  .caret-sqlserver {
+    caret-color: #0078d4 !important;
+  }
+
+  /* Connection dot pulse */
+  .connection-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-green-400;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  /* Loading spinner */
+  .loading-spinner {
+    @apply w-10 h-10 border-[3px] border-outline-variant rounded-full;
+    animation: spin 1s linear infinite;
+  }
+
+  .loading-spinner.redshift {
+    @apply border-t-redshift;
+  }
+
+  .loading-spinner.sqlserver {
+    @apply border-t-sqlserver;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Toast animations */
+  .toast-enter {
+    animation: slideUp 0.3s ease-out forwards;
+  }
+
+  .toast-exit {
+    animation: slideDown 0.3s ease-in forwards;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+  }
+}
+
+@layer utilities {
+  /* Radix UI focus styling */
+  .focus-ring {
+    @apply outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface;
+  }
+
+  .focus-ring-redshift {
+    @apply focus:ring-redshift;
+  }
+
+  .focus-ring-sqlserver {
+    @apply focus:ring-sqlserver;
+  }
+}
+
+/* ============================================
+   SQL STUDIO JOB SCHEDULER STYLES
+   ============================================ */
+
+@layer components {
+  /* Terminal-style glow effects */
+  .glow-cyan {
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.3);
+  }
+
+  .glow-amber {
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.4);
+  }
+
+  .glow-emerald {
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+  }
+
+  .glow-rose {
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.3);
+  }
+
+  /* Running job indicator pulse */
+  @keyframes running-pulse {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+    }
+    50% {
+      opacity: 0.6;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.8);
+    }
+  }
+
+  .running-indicator {
+    animation: running-pulse 1.5s ease-in-out infinite;
+  }
+
+  /* Scheduled job subtle pulse */
+  @keyframes scheduled-pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .scheduled-indicator {
+    animation: scheduled-pulse 2s ease-in-out infinite;
+  }
+
+  /* Table row hover effect */
+  .job-row {
+    @apply transition-all duration-200;
+  }
+
+  .job-row:hover {
+    @apply bg-surface-container-high/50;
+  }
+
+  .job-row:hover td:first-child::before {
+    opacity: 1;
+  }
+
+  /* Card hover lift effect */
+  .job-card {
+    @apply transition-all duration-300;
+  }
+
+  .job-card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Monospace code styling */
+  .mono-code {
+    @apply font-mono text-xs px-2 py-1 rounded;
+    @apply bg-surface-container-high/50;
+  }
+
+  /* Status bar at card top */
+  .status-bar-running {
+    @apply bg-gradient-to-r from-amber-500/80 via-amber-400/80 to-amber-500/80;
+    animation: status-shimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes status-shimmer {
+    0% {
+      background-position: -100% 0;
+    }
+    100% {
+      background-position: 100% 0;
+    }
+  }
+
+  /* Search input glow on focus */
+  .search-input:focus {
+    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+  }
+
+  /* Dropdown menu appear animation */
+  @keyframes dropdown-appear {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .dropdown-menu {
+    animation: dropdown-appear 0.15s ease-out forwards;
+    transform-origin: top right;
+  }
+
+  /* Stats card hover effect */
+  .stat-card {
+    @apply transition-all duration-200;
+  }
+
+  .stat-card:hover {
+    @apply border-outline/50;
+    transform: translateY(-1px);
+  }
+
+  /* Action button press effect */
+  .action-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Empty state floating animation */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .float-animation {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* View toggle button active state */
+  .view-toggle-active {
+    @apply bg-surface-container-high text-on-surface;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Loading skeleton shimmer */
+  @keyframes skeleton-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--surface-container)) 0%,
+      rgb(var(--surface-container-high)) 50%,
+      rgb(var(--surface-container)) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Cron expression styling */
+  .cron-badge {
+    @apply font-mono text-xs px-2 py-1 rounded;
+    @apply bg-cyan-500/10 text-cyan-400/90 border border-cyan-500/20;
+  }
+
+  /* Step type badges */
+  .step-badge-redshift {
+    @apply bg-redshift/20 text-redshift border-redshift/30;
+  }
+
+  .step-badge-sqlserver {
+    @apply bg-sqlserver/20 text-sqlserver border-sqlserver/30;
+  }
+
+  .step-badge-merge {
+    @apply bg-violet-500/20 text-violet-400 border-violet-500/30;
+  }
+}
+
+/* ============================================
+   LANDING PAGE - RETRO-FUTURISTIC TERMINAL
+   ============================================ */
+
+@layer components {
+  /* Film grain overlay effect */
+  .grain-overlay {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    right: -50%;
+    bottom: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    animation: grain 0.5s steps(1) infinite;
+    z-index: 1000;
+  }
+
+  /* Scanline effect */
+  .scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Warm amber glow effect */
+  .amber-glow {
+    box-shadow:
+      0 0 20px rgba(255, 180, 50, 0.15),
+      0 0 40px rgba(255, 180, 50, 0.1),
+      inset 0 0 20px rgba(255, 180, 50, 0.05);
+  }
+
+  .amber-glow-strong {
+    box-shadow:
+      0 0 30px rgba(255, 180, 50, 0.3),
+      0 0 60px rgba(255, 180, 50, 0.2),
+      0 0 100px rgba(255, 180, 50, 0.1);
+  }
+
+  /* Text glow */
+  .text-glow-amber {
+    text-shadow: 0 0 20px rgba(255, 180, 50, 0.5), 0 0 40px rgba(255, 180, 50, 0.3);
+  }
+
+  .text-glow-cyan {
+    text-shadow: 0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(34, 211, 238, 0.3);
+  }
+
+  /* Gradient text with shimmer */
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #f5f5f5 0%,
+      #fcd34d 25%,
+      #f5f5f5 50%,
+      #fcd34d 75%,
+      #f5f5f5 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Terminal cursor blink */
+  .cursor-blink::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    color: #fbbf24;
+  }
+
+  /* Retro border with corners */
+  .retro-border {
+    position: relative;
+    border: 1px solid rgba(255, 180, 50, 0.3);
+  }
+
+  .retro-border::before,
+  .retro-border::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #fbbf24;
+  }
+
+  .retro-border::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .retro-border::after {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Glass morphism card */
+  .glass-card {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 30, 36, 0.8) 0%,
+      rgba(18, 18, 22, 0.9) 100%
+    );
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Cinematic vignette */
+  .vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+    z-index: 998;
+  }
+
+  /* Floating orb animation */
+  .floating-orb {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .floating-orb-delayed {
+    animation: float 6s ease-in-out infinite;
+    animation-delay: -3s;
+  }
+
+  /* Morphing blob */
+  .morphing-blob {
+    animation: morph 8s ease-in-out infinite;
+  }
+
+  /* Line drawing animation */
+  .draw-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: drawLine 2s ease-out forwards;
+  }
+
+  @keyframes drawLine {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Stagger children animations */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.4s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.5s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.6s; }
+  .stagger-children > *:nth-child(7) { animation-delay: 0.7s; }
+  .stagger-children > *:nth-child(8) { animation-delay: 0.8s; }
+
+  /* Magnetic hover effect base */
+  .magnetic-hover {
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Terminal window chrome */
+  .terminal-window {
+    background: linear-gradient(180deg, #1a1a1e 0%, #121216 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .terminal-header {
+    background: linear-gradient(180deg, #2a2a30 0%, #1e1e24 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Code highlighting glow */
+  .code-line-glow {
+    position: relative;
+  }
+
+  .code-line-glow::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #fbbf24, #f59e0b);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .code-line-glow:hover::before {
+    opacity: 1;
+  }
+
+  /* Spotlight effect */
+  .spotlight {
+    position: relative;
+  }
+
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(255, 180, 50, 0.08) 0%,
+      transparent 50%
+    );
+    pointer-events: none;
+  }
+
+  /* Diagonal stripe pattern */
+  .diagonal-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 180, 50, 0.03) 10px,
+      rgba(255, 180, 50, 0.03) 20px
+    );
+  }
+
+  /* Button with glow on hover */
+  .btn-glow {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+    border-radius: inherit;
+    opacity: 0;
+    z-index: -1;
+    filter: blur(15px);
+    transition: opacity 0.3s;
+  }
+
+  .btn-glow:hover::before {
+    opacity: 0.5;
+  }
+
+  /* Reveal on scroll placeholder */
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Horizontal scroll ticker */
+  .ticker {
+    display: flex;
+    animation: ticker 30s linear infinite;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* Grid pattern background */
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(255, 180, 50, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 180, 50, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Noise texture layer */
+  .noise-texture {
+    position: relative;
+  }
+
+  .noise-texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+  }
+
+  /* Number counter animation */
+  .counter-animate {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Marquee infinite scroll */
+  .marquee {
+    display: flex;
+    overflow: hidden;
+  }
+
+  .marquee-content {
+    display: flex;
+    animation: marquee 20s linear infinite;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Interactive card tilt */
+  .tilt-card {
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+
+  /* Gradient border animation */
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(#121216, #121216) padding-box,
+                linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24) border-box;
+    border: 2px solid transparent;
+  }
+
+  .gradient-border-animated {
+    position: relative;
+  }
+
+  .gradient-border-animated::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b, #22d3ee, #fbbf24);
+    background-size: 300% 100%;
+    animation: gradientMove 4s linear infinite;
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+}
+
+/* ============================================
+   REACT-DATEPICKER DARK THEME
+   ============================================ */
+
+.react-datepicker {
+  @apply font-sans border-0 rounded-lg overflow-hidden shadow-xl;
+  background-color: rgb(30 30 36) !important;
+  border: 1px solid rgb(70 70 79) !important;
+}
+
+.react-datepicker__header {
+  background-color: rgb(40 40 48) !important;
+  border-bottom: 1px solid rgb(70 70 79) !important;
+  padding: 12px 8px 8px !important;
+}
+
+.react-datepicker__current-month {
+  @apply text-sm font-semibold;
+  color: rgb(228 225 233) !important;
+  margin-bottom: 8px;
+}
+
+.react-datepicker__day-names {
+  margin-bottom: 0 !important;
+}
+
+.react-datepicker__day-name {
+  @apply text-[10px] font-medium uppercase;
+  color: rgb(199 197 208) !important;
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 2px !important;
+}
+
+.react-datepicker__month {
+  margin: 8px !important;
+}
+
+.react-datepicker__day {
+  @apply text-xs font-mono rounded-md transition-colors;
+  color: rgb(228 225 233) !important;
+  width: 2rem !important;
+  line-height: 2rem !important;
+  margin: 2px !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgb(51 51 64) !important;
+  color: rgb(228 225 233) !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: rgb(34 211 238) !important;
+  color: rgb(18 18 22) !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--selected:hover,
+.react-datepicker__day--keyboard-selected:hover {
+  background-color: rgb(34 211 238 / 0.8) !important;
+}
+
+.react-datepicker__day--today {
+  background-color: rgb(51 51 64) !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: rgb(145 143 154) !important;
+}
+
+.react-datepicker__day--disabled {
+  color: rgb(70 70 79) !important;
+  cursor: not-allowed;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+}
+
+.react-datepicker__navigation {
+  top: 12px !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: rgb(199 197 208) !important;
+  border-width: 2px 2px 0 0 !important;
+  height: 8px !important;
+  width: 8px !important;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: rgb(228 225 233) !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+/* Clear button styling */
+.react-datepicker__close-icon {
+  padding-right: 6px !important;
+}
+
+.react-datepicker__close-icon::after {
+  @apply text-xs font-bold;
+  background-color: rgb(70 70 79) !important;
+  color: rgb(199 197 208) !important;
+  height: 14px !important;
+  width: 14px !important;
+  font-size: 10px !important;
+  line-height: 14px !important;
+}
+
+.react-datepicker__close-icon:hover::after {
+  background-color: rgb(244 63 94 / 0.3) !important;
+  color: rgb(251 113 133) !important;
+}
+
+/* Popper positioning */
+.react-datepicker-popper {
+  z-index: 50 !important;
+}
+
+.react-datepicker-popper[data-placement^="bottom"] {
+  padding-top: 4px !important;
+}
+
+.react-datepicker-popper[data-placement^="top"] {
+  padding-bottom: 4px !important;
+}
