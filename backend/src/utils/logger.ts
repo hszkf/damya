@@ -3,6 +3,8 @@
  * Outputs JSON logs for production use
  */
 
+import { addToBuffer } from './log-buffer';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface LogEntry {
@@ -53,7 +55,7 @@ class Logger {
 
   private output(entry: LogEntry): void {
     const json = JSON.stringify(entry);
-    
+
     if (entry.level === 'error') {
       console.error(json);
     } else if (entry.level === 'warn') {
@@ -61,6 +63,7 @@ class Logger {
     } else {
       console.log(json);
     }
+    addToBuffer(entry);
   }
 
   debug(message: string, meta?: Partial<LogEntry>): void {

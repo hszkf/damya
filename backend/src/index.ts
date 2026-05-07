@@ -5,6 +5,8 @@ import { sqlRoutes } from './routes/sql';
 import { storageRoutes } from './routes/storage';
 import { usersRoutes } from './routes/users';
 import { logsRoutes } from './routes/logs';
+import { deploymentRoutes } from './routes/deployments';
+import { appLogsRoutes } from './routes/app-logs';
 import { initRedshift, closeRedshift, getHealthStatus as getRedshiftHealth } from './services/database/redshift';
 import { storageService } from './services/storage-service';
 import { requestIdMiddleware, requestLoggerMiddleware, errorHandler, notFoundHandler } from './middleware/error-handler';
@@ -123,6 +125,8 @@ app.route('/redshift', sqlRoutes);
 app.route('/storage', storageRoutes);
 app.route('/users', usersRoutes);
 app.route('/logs', logsRoutes);
+app.route('/deployments', deploymentRoutes);
+app.route('/app-logs', appLogsRoutes);
 
 // 404 handler
 app.notFound(notFoundHandler);

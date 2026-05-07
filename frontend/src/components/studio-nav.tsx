@@ -4,6 +4,8 @@ import {
   HardDrive,
   BarChart3,
   ChevronLeft,
+  Rocket,
+  ScrollText,
   LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +39,20 @@ const navItems: NavItem[] = [
     shortLabel: "Storage",
     icon: HardDrive,
     colour: "orange",
+  },
+  {
+    href: "/deployments",
+    label: "Deployments",
+    shortLabel: "Deploy",
+    icon: Rocket,
+    colour: "cyan",
+  },
+  {
+    href: "/logs",
+    label: "Backend Logs",
+    shortLabel: "Logs",
+    icon: ScrollText,
+    colour: "rose",
   },
 ];
 

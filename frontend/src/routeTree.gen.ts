@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StorageRouteImport } from './routes/storage'
 import { Route as SqlRouteImport } from './routes/sql'
+import { Route as LogsRouteImport } from './routes/logs'
+import { Route as DeploymentsRouteImport } from './routes/deployments'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,6 +28,16 @@ const StorageRoute = StorageRouteImport.update({
 const SqlRoute = SqlRouteImport.update({
   id: '/sql',
   path: '/sql',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogsRoute = LogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeploymentsRoute = DeploymentsRouteImport.update({
+  id: '/deployments',
+  path: '/deployments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -63,6 +75,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/deployments': typeof DeploymentsRoute
+  '/logs': typeof LogsRoute
   '/sql': typeof SqlRoute
   '/storage': typeof StorageRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -72,6 +86,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/deployments': typeof DeploymentsRoute
+  '/logs': typeof LogsRoute
   '/sql': typeof SqlRoute
   '/storage': typeof StorageRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -83,6 +99,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/deployments': typeof DeploymentsRoute
+  '/logs': typeof LogsRoute
   '/sql': typeof SqlRoute
   '/storage': typeof StorageRoute
   '/admin/logs': typeof AdminLogsRoute
@@ -95,6 +113,8 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/dashboard'
+    | '/deployments'
+    | '/logs'
     | '/sql'
     | '/storage'
     | '/admin/logs'
@@ -104,6 +124,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/dashboard'
+    | '/deployments'
+    | '/logs'
     | '/sql'
     | '/storage'
     | '/admin/logs'
@@ -114,6 +136,8 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/dashboard'
+    | '/deployments'
+    | '/logs'
     | '/sql'
     | '/storage'
     | '/admin/logs'
@@ -125,6 +149,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRoute
+  DeploymentsRoute: typeof DeploymentsRoute
+  LogsRoute: typeof LogsRoute
   SqlRoute: typeof SqlRoute
   StorageRoute: typeof StorageRoute
 }
@@ -143,6 +169,20 @@ declare module '@tanstack/react-router' {
       path: '/sql'
       fullPath: '/sql'
       preLoaderRoute: typeof SqlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logs': {
+      id: '/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deployments': {
+      id: '/deployments'
+      path: '/deployments'
+      fullPath: '/deployments'
+      preLoaderRoute: typeof DeploymentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -208,6 +248,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRoute,
+  DeploymentsRoute: DeploymentsRoute,
+  LogsRoute: LogsRoute,
   SqlRoute: SqlRoute,
   StorageRoute: StorageRoute,
 }
