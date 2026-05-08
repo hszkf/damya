@@ -334,9 +334,10 @@ function RedshiftQueryPage() {
 
   // --- Load schemas ---
 
-  const loadSchemas = useCallback(async () => {
+  const loadSchemas = useCallback(async (forceRefresh: boolean = false) => {
     setLoadingSchemas(true);
-    const data: SchemaResult = await getSchemas('redshift');
+    if (forceRefresh) await clearSchemaCache('redshift');
+    const data: SchemaResult = await getSchemas('redshift', forceRefresh);
     if (data.status === 'success') setSchemas(data.schemas);
     setLoadingSchemas(false);
   }, []);
@@ -609,16 +610,15 @@ function RedshiftQueryPage() {
                 <Database className="w-3.5 h-3.5 text-amber-400" />
                 <span className="text-xs font-semibold text-[rgb(var(--on-surface))]">Schemas</span>
               </div>
-              <button
-                onClick={() => {
-                  loadSchemas();
-                  clearSchemaCache('redshift');
-                }}
-                className="p-1 rounded hover:bg-[rgb(var(--surface-container-highest))] text-[rgb(var(--on-surface-variant))]"
-                title="Refresh"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingSchemas ? 'animate-spin' : ''}`} />
-              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => loadSchemas(true)}
+                  className="p-1 rounded hover:bg-[rgb(var(--surface-container-highest))] text-[rgb(var(--on-surface-variant))]"
+                  title="Clear cache & refresh schemas"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingSchemas ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
             </div>
 
             {/* Search */}
