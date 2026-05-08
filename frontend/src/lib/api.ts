@@ -38,6 +38,19 @@ export interface ClearCacheResult {
   message: string;
 }
 
+export interface ColumnMetadata {
+  column_name: string;
+  data_type: string;
+  is_nullable: 'YES' | 'NO';
+  ordinal_position: number;
+}
+
+export interface TableColumnsResult {
+  status: 'success' | 'error';
+  columns: ColumnMetadata[];
+  error?: string;
+}
+
 /**
  * Execute a SQL query against the specified database
  */
@@ -228,6 +241,33 @@ export async function clearSchemaCache(
       throw error;
     }
     throw new Error(`An unexpected error occurred while clearing cache: ${String(error)}`);
+  }
+}
+
+/**
+ * Get column metadata for a specific table
+ */
+export async function getTableColumns(
+  database: 'redshift',
+  schema: string,
+  table: string,
+): Promise<TableColumnsResult> {
+  try {
+    const params = new URLSearchParams({ schema, table });
+    const response = await fetch(`${API_BASE_URL}/${database}/columns?${params}`);
+    const data = await response.json();
+
+    return {
+      status: data.status || (response.ok ? 'success' : 'error'),
+      columns: data.columns || [],
+      error: data.error,
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      columns: [],
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 

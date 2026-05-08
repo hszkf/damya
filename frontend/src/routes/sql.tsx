@@ -9,6 +9,7 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronDown,
+  ChevronUp,
   Circle,
   X,
   Clock,
@@ -27,8 +28,8 @@ import {
   FileSpreadsheet,
   BarChart3,
 } from 'lucide-react';
-import { executeQuery, checkHealth, getSchemas, clearSchemaCache } from '~/lib/api';
-import type { QueryResult, SchemaResult } from '~/lib/api';
+import { executeQuery, checkHealth, getSchemas, clearSchemaCache, getTableColumns } from '~/lib/api';
+import type { QueryResult, SchemaResult, ColumnMetadata } from '~/lib/api';
 import type { LocalSavedQuery } from '~/lib/saved-queries';
 import { addToHistory, getHistory, clearHistory, formatHistoryTimestamp } from '~/lib/query-history';
 import { downloadAsCSV, downloadAsExcel, downloadAsJSON } from '~/lib/download';
@@ -42,6 +43,13 @@ export const Route = createFileRoute('/sql')({
 
 // --- Tab types ---
 
+type SortDirection = 'asc' | 'desc' | null;
+
+interface SortState {
+  column: string;
+  direction: SortDirection;
+}
+
 interface QueryTab {
   id: string;
   name: string;
@@ -50,6 +58,7 @@ interface QueryTab {
   error: string | null;
   loading: boolean;
   executionTime: number | null;
+  sortState: SortState | null;
 }
 
 let tabCounter = 1;
@@ -63,6 +72,7 @@ function createTab(name?: string): QueryTab {
     error: null,
     loading: false,
     executionTime: null,
+    sortState: null,
   };
 }
 
@@ -221,6 +231,8 @@ interface PageCache {
   activeTabId: string;
   schemas: Record<string, string[]>;
   expandedSchemas: Set<string>;
+  expandedTables: Set<string>;
+  tableColumns: Record<string, ColumnMetadata[]>;
   showSidebar: boolean;
   schemaSearch: string;
   limitRows: boolean;
@@ -257,6 +269,9 @@ function RedshiftQueryPage() {
   const [expandedSchemas, setExpandedSchemas] = useState<Set<string>>(cached?.expandedSchemas ?? new Set());
   const [showSidebar, setShowSidebar] = useState(cached?.showSidebar ?? true);
   const [schemaSearch, setSchemaSearch] = useState(cached?.schemaSearch ?? '');
+  const [expandedTables, setExpandedTables] = useState<Set<string>>(cached?.expandedTables ?? new Set());
+  const [tableColumns, setTableColumns] = useState<Record<string, ColumnMetadata[]>>(cached?.tableColumns ?? {});
+  const [loadingColumns, setLoadingColumns] = useState<Set<string>>(new Set());
 
   // Dialog state
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -290,8 +305,8 @@ function RedshiftQueryPage() {
 
   // Save cache on state changes
   useEffect(() => {
-    saveCache({ tabs, activeTabId, schemas, expandedSchemas, showSidebar, schemaSearch, limitRows, sidebarWidth, editorPct });
-  }, [tabs, activeTabId, schemas, expandedSchemas, showSidebar, schemaSearch, limitRows, sidebarWidth, editorPct]);
+    saveCache({ tabs, activeTabId, schemas, expandedSchemas, expandedTables, tableColumns, showSidebar, schemaSearch, limitRows, sidebarWidth, editorPct });
+  }, [tabs, activeTabId, schemas, expandedSchemas, expandedTables, tableColumns, showSidebar, schemaSearch, limitRows, sidebarWidth, editorPct]);
 
   // Derived: active tab
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
@@ -336,7 +351,11 @@ function RedshiftQueryPage() {
 
   const loadSchemas = useCallback(async (forceRefresh: boolean = false) => {
     setLoadingSchemas(true);
-    if (forceRefresh) await clearSchemaCache('redshift');
+    if (forceRefresh) {
+      await clearSchemaCache('redshift');
+      setTableColumns({});
+      setExpandedTables(new Set());
+    }
     const data: SchemaResult = await getSchemas('redshift', forceRefresh);
     if (data.status === 'success') setSchemas(data.schemas);
     setLoadingSchemas(false);
@@ -382,7 +401,7 @@ function RedshiftQueryPage() {
 
     console.log('[runQuery] SQL being sent:', JSON.stringify(sql));
 
-    updateTab(tabId, { loading: true, error: null, result: null, executionTime: null });
+    updateTab(tabId, { loading: true, error: null, result: null, executionTime: null, sortState: null });
     setResultPage(safePage);
     const start = Date.now();
 
@@ -492,6 +511,69 @@ function RedshiftQueryPage() {
     updateTab(activeTab.id, { query: `SELECT * FROM ${schema}.${table}` });
     setTimeout(() => editorRef.current?.focus(), 0);
   };
+
+  const toggleTableColumns = useCallback(async (schema: string, table: string) => {
+    const key = `${schema}.${table}`;
+
+    if (expandedTables.has(key)) {
+      setExpandedTables((prev) => { const next = new Set(prev); next.delete(key); return next; });
+      return;
+    }
+
+    setExpandedTables((prev) => { const next = new Set(prev); next.add(key); return next; });
+
+    if (!tableColumns[key]) {
+      setLoadingColumns((prev) => new Set(prev).add(key));
+      try {
+        const result = await getTableColumns('redshift', schema, table);
+        if (result.status === 'success') {
+          setTableColumns((prev) => ({ ...prev, [key]: result.columns }));
+        }
+      } catch {
+        // Columns won't show — silently fail
+      } finally {
+        setLoadingColumns((prev) => { const next = new Set(prev); next.delete(key); return next; });
+      }
+    }
+  }, [expandedTables, tableColumns]);
+
+  // --- Sort ---
+
+  const toggleSort = useCallback((column: string) => {
+    const current = activeTab.sortState;
+    let newSort: SortState | null;
+
+    if (!current || current.column !== column) {
+      newSort = { column, direction: 'asc' };
+    } else if (current.direction === 'asc') {
+      newSort = { column, direction: 'desc' };
+    } else {
+      newSort = null;
+    }
+
+    updateTab(activeTab.id, { sortState: newSort });
+  }, [activeTab.id, activeTab.sortState, updateTab]);
+
+  const sortedResultRows = useMemo(() => {
+    if (!activeTab.result?.rows) return [];
+    const sortState = activeTab.sortState;
+    if (!sortState?.direction) return activeTab.result.rows;
+
+    return [...activeTab.result.rows].sort((a, b) => {
+      const aVal = a[sortState.column];
+      const bVal = b[sortState.column];
+
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortState.direction === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+
+      const cmp = String(aVal).toLowerCase().localeCompare(String(bVal).toLowerCase());
+      return sortState.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [activeTab.result, activeTab.sortState]);
 
   // --- Copy / export ---
 
@@ -676,17 +758,66 @@ function RedshiftQueryPage() {
                       </button>
                       {expandedSchemas.has(schema) && (
                         <div className="ml-3.5">
-                          {tables.map((table) => (
-                            <button
-                              key={table}
-                              onClick={() => insertTable(schema, table)}
-                              className="w-full flex items-center gap-1 px-1.5 py-px rounded hover:bg-[rgb(var(--surface-container-highest))] text-left text-[rgb(var(--on-surface-variant))]"
-                              title={`Insert ${schema}.${table}`}
-                            >
-                              <Table2 className="w-2.5 h-2.5 shrink-0 opacity-50" />
-                              <span className="text-[11px] truncate">{table}</span>
-                            </button>
-                          ))}
+                          {tables.map((table) => {
+                            const tableKey = `${schema}.${table}`;
+                            const isExpanded = expandedTables.has(tableKey);
+                            const isLoading = loadingColumns.has(tableKey);
+                            const columns = tableColumns[tableKey];
+
+                            return (
+                              <div key={table}>
+                                <div className="flex items-center">
+                                  <button
+                                    onClick={() => toggleTableColumns(schema, table)}
+                                    className="p-0.5 shrink-0 text-[rgb(var(--on-surface-variant)/0.5)] hover:text-amber-400"
+                                  >
+                                    {isExpanded ? (
+                                      <ChevronDown className="w-2 h-2" />
+                                    ) : (
+                                      <ChevronRight className="w-2 h-2" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => insertTable(schema, table)}
+                                    className="flex-1 flex items-center gap-1 px-1 py-px rounded hover:bg-[rgb(var(--surface-container-highest))] text-left text-[rgb(var(--on-surface-variant))]"
+                                    title={`SELECT * FROM ${schema}.${table}`}
+                                  >
+                                    <Table2 className="w-2.5 h-2.5 shrink-0 opacity-50" />
+                                    <span className="text-[11px] truncate">{table}</span>
+                                  </button>
+                                </div>
+                                {isExpanded && (
+                                  <div className="ml-4 border-l border-[rgb(var(--outline-variant)/0.15)] pl-1.5 py-0.5">
+                                    {isLoading && (
+                                      <div className="flex items-center gap-1.5 px-1 py-0.5 text-[10px] text-[rgb(var(--on-surface-variant)/0.5)]">
+                                        <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                        Loading columns...
+                                      </div>
+                                    )}
+                                    {columns && columns.map((col) => (
+                                      <div
+                                        key={col.column_name}
+                                        className="flex items-center gap-1.5 px-1 py-px text-[10px] text-[rgb(var(--on-surface-variant)/0.7)]"
+                                      >
+                                        <span className="truncate font-mono">{col.column_name}</span>
+                                        <span className="shrink-0 px-1 py-px rounded text-[9px] bg-[rgb(var(--surface-container-highest))] text-[rgb(var(--on-surface-variant)/0.5)]">
+                                          {col.data_type}
+                                        </span>
+                                        {col.is_nullable === 'NO' && (
+                                          <span className="shrink-0 text-[8px] text-red-400/70 font-semibold">NN</span>
+                                        )}
+                                      </div>
+                                    ))}
+                                    {columns && columns.length === 0 && !isLoading && (
+                                      <div className="text-[10px] text-[rgb(var(--on-surface-variant)/0.4)] px-1 py-0.5">
+                                        No columns found
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -986,7 +1117,7 @@ function RedshiftQueryPage() {
                 </div>
               )}
               {activeTab.result && activeTab.result.rows.length > 0 && (() => {
-                const rows = activeTab.result.rows;
+                const rows = sortedResultRows;
                 const pageRowStart = resultPage * PAGE_SIZE;
                 const totalPages = totalRows !== null ? Math.max(1, Math.ceil(totalRows / PAGE_SIZE)) : (rows.length >= PAGE_SIZE ? resultPage + 2 : resultPage + 1);
                 const showPagination = !limitRows;
@@ -1056,14 +1187,29 @@ function RedshiftQueryPage() {
                           <th className="text-left px-3 py-2 text-xs font-semibold text-[rgb(var(--on-surface-variant)/0.5)] whitespace-nowrap border-b border-[rgb(var(--outline-variant)/0.3)] w-10">
                             #
                           </th>
-                          {activeTab.result.columns.map((col) => (
-                            <th
-                              key={col}
-                              className="text-left px-3 py-2 text-xs font-semibold text-[rgb(var(--on-surface-variant))] whitespace-nowrap border-b border-[rgb(var(--outline-variant)/0.3)]"
-                            >
-                              {col}
-                            </th>
-                          ))}
+                          {activeTab.result.columns.map((col) => {
+                            const isSorted = activeTab.sortState?.column === col;
+                            const direction = isSorted ? activeTab.sortState!.direction : null;
+
+                            return (
+                              <th
+                                key={col}
+                                onClick={() => toggleSort(col)}
+                                className="text-left px-3 py-2 text-xs font-semibold text-[rgb(var(--on-surface-variant))] whitespace-nowrap border-b border-[rgb(var(--outline-variant)/0.3)] cursor-pointer select-none hover:bg-[rgb(var(--surface-container)/0.5)] transition-colors"
+                              >
+                                <div className="flex items-center gap-1">
+                                  <span>{col}</span>
+                                  {direction === 'asc' ? (
+                                    <ChevronUp className="w-2.5 h-2.5 text-amber-400" />
+                                  ) : direction === 'desc' ? (
+                                    <ChevronDown className="w-2.5 h-2.5 text-amber-400" />
+                                  ) : (
+                                    <ChevronDown className="w-2.5 h-2.5 text-[rgb(var(--on-surface-variant)/0.15)]" />
+                                  )}
+                                </div>
+                              </th>
+                            );
+                          })}
                         </tr>
                       </thead>
                       <tbody>

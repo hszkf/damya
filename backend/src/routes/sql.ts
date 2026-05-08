@@ -239,3 +239,28 @@ sqlRoutes.get('/tables', async (c) => {
     );
   }
 });
+
+// Get column metadata for a specific table
+sqlRoutes.get('/columns', async (c) => {
+  const schemaName = c.req.query('schema');
+  const tableName = c.req.query('table');
+
+  if (!schemaName || !tableName) {
+    return c.json({
+      status: 'error',
+      columns: [],
+      error: 'Both schema and table query parameters are required',
+    }, 400);
+  }
+
+  try {
+    const columns = await redshift.getTableColumns(schemaName, tableName);
+    return c.json({ status: 'success', columns });
+  } catch (error: any) {
+    return c.json({
+      status: 'error',
+      columns: [],
+      error: error.message || 'Failed to fetch column metadata',
+    }, 500);
+  }
+});

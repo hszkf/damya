@@ -25,6 +25,13 @@ export interface QueryResult {
   executionTime: number;
 }
 
+export interface ColumnMetadata {
+  column_name: string;
+  data_type: string;
+  is_nullable: 'YES' | 'NO';
+  ordinal_position: number;
+}
+
 let client: RedshiftDataClient | null = null;
 let connected = false;
 let connectionError: string | null = null;
@@ -280,6 +287,21 @@ async function getSchemaViaSql(): Promise<any> {
   } catch (error: any) {
     return {};
   }
+}
+
+export async function getTableColumns(schemaName: string, tableName: string): Promise<ColumnMetadata[]> {
+  if (!client || !connected) return [];
+
+  const query = `
+    SELECT column_name, data_type, is_nullable, ordinal_position
+    FROM information_schema.columns
+    WHERE table_schema = '${schemaName.replace(/'/g, "''")}'
+      AND table_name = '${tableName.replace(/'/g, "''")}'
+    ORDER BY ordinal_position
+  `;
+
+  const result = await executeQuery(query);
+  return result.rows as ColumnMetadata[];
 }
 
 export async function getHealthStatus(): Promise<any> {
